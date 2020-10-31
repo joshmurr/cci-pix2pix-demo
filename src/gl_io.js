@@ -8,20 +8,20 @@ export default class GL_IO {
 
     this.input_vs = `#version 300 es
     in vec4 a_position;
-    //in vec2 a_texcoord;
+    in vec2 a_texcoord;
 
-    //out vec2 v_texcoord;
+    out vec2 v_texcoord;
 
     void main() {
       gl_Position = a_position;
-      //v_texcoord = a_texcoord;
+      v_texcoord = a_texcoord;
     }
     `;
 
     this.input_fs = `#version 300 es
     precision highp float;
      
-    //in vec2 v_texcoord;
+    in vec2 v_texcoord;
     uniform sampler2D u_texture;
     out vec4 outColor;
 
@@ -33,7 +33,7 @@ export default class GL_IO {
       float avg = 0.0;
       for(int y=-1; y<=1; ++y){
         for(int x=-1; x<=1; ++x){
-          avg += get(p + vec2(x, y));
+          avg += get(p + vec2(x, y)/256.0);
         }
       }
       return avg / 9.0;
@@ -41,8 +41,7 @@ export default class GL_IO {
           
 
     void main() {
-      vec2 st = gl_FragCoord.xy / 512.0;
-      outColor = vec4(avgpool(st), 0.0, 0.0, 1.0);
+      outColor = vec4(avgpool(v_texcoord), 0.0, 0.0, 1.0);
     }
     `;
 
@@ -70,8 +69,9 @@ export default class GL_IO {
       //outColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     `;
-    this.verts = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
-    this.textureCoordinates = [0, 0, 1, 0, 1, 1, 0, 1];
+
+    this.verts =      [-1, -1, -1, 1,  1, -1,   -1, 1, 1,  1, 1, -1]; //prettier-ignore
+    this.tex_coords = [ 0,  1,  0, 0,  1,  1,    0, 0, 1,  0, 1,  1]; //prettier-ignore
 
     /* CREATE SHADER PROGRAMS */
     this.input_program = this.createProgram(
@@ -97,10 +97,10 @@ export default class GL_IO {
       this.output_program,
       'a_position'
     );
-    //this.input_texAttrLoc = this.gl.getAttribLocation(
-    //this.input_program,
-    //'a_texcoord'
-    //);
+    this.input_texAttrLoc = this.gl.getAttribLocation(
+      this.input_program,
+      'a_texcoord'
+    );
     this.output_texAttrLoc = this.gl.getAttribLocation(
       this.output_program,
       'a_texcoord'
@@ -118,7 +118,7 @@ export default class GL_IO {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texBuffer);
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
-      new Float32Array(this.verts),
+      new Float32Array(this.tex_coords),
       this.gl.STATIC_DRAW
     );
 
@@ -132,15 +132,15 @@ export default class GL_IO {
       0, //stride
       0 //offset
     );
-    //this.gl.enableVertexAttribArray(this.input_posAttrLoc);
-    //this.gl.vertexAttribPointer(
-    //this.input_posAttrLoc,
-    //2, // size
-    //this.gl.FLOAT,
-    //false, //normalise,
-    //0, //stride
-    //0 //offset
-    //);
+    this.gl.enableVertexAttribArray(this.input_posAttrLoc);
+    this.gl.vertexAttribPointer(
+      this.input_posAttrLoc,
+      2, // size
+      this.gl.FLOAT,
+      false, //normalise,
+      0, //stride
+      0 //offset
+    );
 
     this.gl.enableVertexAttribArray(this.input_texAttrLoc);
     this.gl.vertexAttribPointer(
@@ -325,9 +325,6 @@ export default class GL_IO {
       this.gl.TEXTURE_2D,
       0,
       this.gl.R8,
-      256,
-      256,
-      0,
       this.gl.RED,
       this.gl.UNSIGNED_BYTE,
       _in
@@ -351,9 +348,6 @@ export default class GL_IO {
       this.gl.TEXTURE_2D,
       0,
       this.gl.RGB32F,
-      256,
-      256,
-      0,
       this.gl.RGB,
       this.gl.FLOAT,
       _out

@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import WebcamHandler from './webcam_handler.js';
-import GL_IO from './outputGL.js';
+import GL_IO from './gl_io.js';
 import './styles.scss';
 
 let MODEL_INPUT_SHAPE;
