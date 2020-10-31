@@ -21,6 +21,7 @@ body {
   //background-color: grey;
   width: 100vw;
   height: 100vh;
+  overflow-x: hidden;
 }
 
 .wrapper {
@@ -57,4 +58,14 @@ body {
       grid-column: 1 / -1;
     }
   }
+}
+.buttons {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+video {
+  display: none;
 }
