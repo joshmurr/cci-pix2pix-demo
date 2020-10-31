@@ -8,8 +8,14 @@
     <div class="wrapper">
       <h1><%= htmlWebpackPlugin.options.title %></h1>
       <div class="container">
-        <video id="video" controls="false" autoplay></video>
-        <canvas id="canvas" width="1024" height="512"></canvas>
+        <video
+          id="video"
+          width="256"
+          height="256"
+          controls="false"
+          autoplay
+        ></video>
+        <canvas id="canvas" width="512" height="256"></canvas>
       </div>
       <div class="buttons">
         <button type="button">Init Webcam</button>

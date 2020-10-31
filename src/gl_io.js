@@ -65,7 +65,7 @@ export default class GL_IO {
     out vec4 outColor;
 
     void main() {
-      outColor = texture(u_texture, (v_texcoord));
+      outColor = texture(u_texture, v_texcoord);
       //outColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     `;
@@ -114,6 +114,25 @@ export default class GL_IO {
       new Float32Array(this.verts),
       this.gl.STATIC_DRAW
     );
+    this.gl.enableVertexAttribArray(this.input_posAttrLoc);
+    this.gl.vertexAttribPointer(
+      this.input_posAttrLoc,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+    this.gl.enableVertexAttribArray(this.output_posAttrLoc);
+    this.gl.vertexAttribPointer(
+      this.output_posAttrLoc,
+      2,
+      this.gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
     const texBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, texBuffer);
     this.gl.bufferData(
@@ -121,44 +140,23 @@ export default class GL_IO {
       new Float32Array(this.tex_coords),
       this.gl.STATIC_DRAW
     );
-
-    /* LINK TO VERTEX ATTRIBUTE POINTERS */
-    this.gl.enableVertexAttribArray(this.input_posAttrLoc);
-    this.gl.vertexAttribPointer(
-      this.input_posAttrLoc,
-      2, // size
-      this.gl.FLOAT,
-      false, //normalise,
-      0, //stride
-      0 //offset
-    );
-    this.gl.enableVertexAttribArray(this.input_posAttrLoc);
-    this.gl.vertexAttribPointer(
-      this.input_posAttrLoc,
-      2, // size
-      this.gl.FLOAT,
-      false, //normalise,
-      0, //stride
-      0 //offset
-    );
-
     this.gl.enableVertexAttribArray(this.input_texAttrLoc);
     this.gl.vertexAttribPointer(
       this.input_texAttrLoc,
-      2, // size
+      2,
       this.gl.FLOAT,
-      false, //normalise,
-      0, //stride
-      0 //offset
+      false,
+      0,
+      0
     );
     this.gl.enableVertexAttribArray(this.output_texAttrLoc);
     this.gl.vertexAttribPointer(
       this.output_texAttrLoc,
-      2, // size
+      2,
       this.gl.FLOAT,
-      false, //normalise,
-      0, //stride
-      0 //offset
+      false,
+      0,
+      0
     );
 
     this.input_texture = this.createInputTexture(this.gl);
@@ -204,10 +202,6 @@ export default class GL_IO {
 
   createInputTexture() {
     // Texture
-    const textureLocation = this.gl.getUniformLocation(
-      this.input_program,
-      'u_texture'
-    );
     const texture = this.gl.createTexture();
     this.gl.activeTexture(this.gl.TEXTURE0 + 0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
@@ -249,10 +243,6 @@ export default class GL_IO {
 
   createOutputTexture() {
     // Texture
-    const textureLocation = this.gl.getUniformLocation(
-      this.output_program,
-      'u_texture'
-    );
     const texture = this.gl.createTexture();
     this.gl.activeTexture(this.gl.TEXTURE0 + 0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
