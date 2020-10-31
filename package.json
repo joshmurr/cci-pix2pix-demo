@@ -1,0 +1,36 @@
+{
+  "name": "pix2pix-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --config webpack.prod.js",
+    "dev": "webpack serve --config webpack.dev.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "babel-loader": "^8.1.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^5.0.0",
+    "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "html-webpack-plugin": "^4.5.0",
+    "mini-css-extract-plugin": "^1.2.1",
+    "prettier": "^2.1.2",
+    "sass": "^1.28.0",
+    "sass-loader": "^10.0.4",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.3.2",
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.0",
+    "webpack-merge": "^5.3.0"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^2.7.0",
+    "include-media": "^1.4.9"
+  }
+}

@@ -1,0 +1,60 @@
+@charset 'utf-8';
+@import '_include-media';
+
+html {
+  box-sizing: border-box;
+  font-family: sans-serif;
+  * {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+* {
+  :before,
+  :after {
+    box-sizing: inherit;
+  }
+}
+
+body {
+  //background-color: grey;
+  width: 100vw;
+  height: 100vh;
+}
+
+.wrapper {
+  //background-color: lightgrey;
+  display: grid;
+  padding: 2rem 0;
+  grid-template-columns:
+    1fr
+    min(65ch, 100%)
+    1fr;
+  * {
+    grid-column: 2;
+  }
+
+  h1 {
+    text-align: center;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+
+    @include media('>=phone', '<desktop') {
+      flex-direction: column;
+      grid-column: 1 / -1;
+      * {
+        margin: 0 auto;
+      }
+    }
+
+    @include media('>=desktop') {
+      flex-direction: row;
+      grid-column: 1 / -1;
+    }
+  }
+}
