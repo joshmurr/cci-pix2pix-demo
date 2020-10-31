@@ -14,7 +14,7 @@ export default class GL_IO {
 
     void main() {
       gl_Position = a_position;
-      v_texcoord = a_texcoord;
+      v_texcoord = a_texcoord * vec2(3.0 / 4.0, 1.0);
     }
     `;
 
@@ -25,6 +25,8 @@ export default class GL_IO {
     uniform sampler2D u_texture;
     out vec4 outColor;
 
+    const float res = 512.0;
+
     float get(vec2 p){
       return texture(u_texture, p).r;
     }
@@ -33,7 +35,7 @@ export default class GL_IO {
       float avg = 0.0;
       for(int y=-1; y<=1; ++y){
         for(int x=-1; x<=1; ++x){
-          avg += get(p + vec2(x, y)/256.0);
+          avg += get(p + vec2(x, y)/res);
         }
       }
       return avg / 9.0;
@@ -41,7 +43,8 @@ export default class GL_IO {
           
 
     void main() {
-      outColor = vec4(avgpool(v_texcoord), 0.0, 0.0, 1.0);
+      //outColor = texture(u_texture, v_texcoord);
+      outColor = vec4(vec3(avgpool(v_texcoord)), 1.0);
     }
     `;
 
@@ -81,7 +84,7 @@ export default class GL_IO {
     );
     this.output_program = this.createProgram(
       this.gl,
-      this.output_vs,
+      this.input_vs,
       this.output_fs
     );
 
@@ -159,13 +162,39 @@ export default class GL_IO {
       0
     );
 
-    this.input_texture = this.createInputTexture(this.gl);
-    this.output_texture = this.createOutputTexture(this.gl);
+    this.input_texture = this.createInputTexture();
+    this.process_texture = this.createOutputTexture();
+    this.output_texture = this.createOutputTexture();
+    this.framebuffer = this.createFramebuffer(this.process_texture);
+
+    this.u_input_tex = this.gl.getUniformLocation(
+      this.input_program,
+      'u_texture'
+    );
+    this.u_output_tex = this.gl.getUniformLocation(
+      this.output_program,
+      'u_texture'
+    );
 
     this.gl.bindVertexArray(null);
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
+    this.pixel_store = new Uint8Array(256 * 256 * 4);
+
     this.resize();
+  }
+
+  createFramebuffer(_tex) {
+    const fb = this.gl.createFramebuffer();
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
+    this.gl.framebufferTexture2D(
+      this.gl.FRAMEBUFFER,
+      this.gl.COLOR_ATTACHMENT0,
+      this.gl.TEXTURE_2D,
+      _tex,
+      0
+    );
+    return fb;
   }
 
   createShader(gl, source, type) {
@@ -249,12 +278,12 @@ export default class GL_IO {
     this.gl.texImage2D(
       this.gl.TEXTURE_2D,
       0,
-      this.gl.RGB32F,
+      this.gl.RGB8,
       256,
       256,
       0,
       this.gl.RGB,
-      this.gl.FLOAT,
+      this.gl.UNSIGNED_BYTE,
       null
     );
 
@@ -305,12 +334,21 @@ export default class GL_IO {
     }
   }
 
+  get pixels() {
+    return this.pixel_store;
+  }
+
   draw(_in, _out) {
     this.gl.bindVertexArray(this.vao);
-    this.gl.enable(this.gl.SCISSOR_TEST);
+
     this.gl.useProgram(this.input_program);
-    this.gl.viewport(0, 0, this.gl.canvas.width / 2, this.gl.canvas.height);
-    this.gl.scissor(0, 0, this.gl.canvas.width / 2, this.gl.canvas.height);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);
+    this.gl.uniform1i(this.u_input_tex, 0);
+    this.gl.activeTexture(this.gl.TEXTURE0 + 0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.input_texture);
+    this.gl.enable(this.gl.SCISSOR_TEST);
+    this.gl.viewport(0, 0, 256, 256);
+    this.gl.scissor(0, 0, 256, 256);
     this.gl.texImage2D(
       this.gl.TEXTURE_2D,
       0,
@@ -320,8 +358,21 @@ export default class GL_IO {
       _in
     );
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.verts.length / 2);
+    this.gl.readPixels(
+      0,
+      0,
+      256,
+      256,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      this.pixel_store
+    );
 
     this.gl.useProgram(this.output_program);
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+    this.gl.uniform1i(this.u_output_tex, 0);
+    this.gl.activeTexture(this.gl.TEXTURE0 + 0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.output_texture);
     this.gl.viewport(
       this.gl.canvas.width / 2,
       0,
@@ -338,6 +389,9 @@ export default class GL_IO {
       this.gl.TEXTURE_2D,
       0,
       this.gl.RGB32F,
+      256,
+      256,
+      0,
       this.gl.RGB,
       this.gl.FLOAT,
       _out

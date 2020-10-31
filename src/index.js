@@ -11,7 +11,7 @@ const MODELS = {
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
-const gl = canvas.getContext('webgl2');
+const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
 
@@ -20,8 +20,8 @@ buttons[0].addEventListener('click', (e) => webcamHandler.initCam());
 buttons[1].addEventListener('click', (e) => webcamHandler.stopCam());
 buttons[2].addEventListener('click', (e) => draw());
 
+let model;
 async function loadModel(modelID = 'Med_flowers_256_8') {
-  let model;
   try {
     if (modelID === 'User Upload') {
       const load = tf.io.browserFiles([userModel.json, ...userModel.weights]);
@@ -37,17 +37,15 @@ async function loadModel(modelID = 'Med_flowers_256_8') {
     model.artifacts.userDefinedMetadata.signature.inputs
   );
 
-  console.log(MODEL_INPUT_SHAPE);
-
   model.predict(tf.zeros(MODEL_INPUT_SHAPE)).dispose();
-  return model;
 }
 
-async function predict(imgElement, outputCanvas, gl = false) {
+async function predict(model, pixels) {
+  const red = (el, i, arr) => i % 4 === 0;
+
   const logits = tf.tidy(() => {
-    const img = tf.browser
-      .fromPixels(imgElement, MODEL_INPUT_SHAPE[3])
-      .toFloat();
+    const redChannel = pixels.filter(red);
+    const img = tf.tensor(redChannel, [256, 256, 1]).toFloat();
 
     const offset = tf.scalar(127.5);
     const normalized = img.sub(offset).div(offset);
@@ -57,13 +55,18 @@ async function predict(imgElement, outputCanvas, gl = false) {
   });
 
   const output = await postProcessTF(logits);
+  const data = await output.data();
 
-  if (gl) {
-    let data = await output.data();
-    outputGL.draw(data);
-  } else {
-    tf.browser.toPixels(output, outputCanvas);
-  }
+  glio.draw(video, data);
+}
+
+async function postProcessTF(logits) {
+  return tf.tidy(() => {
+    const scale = tf.scalar(0.5);
+    const squeezed = logits.squeeze().mul(scale).add(scale);
+    const resized = tf.image.resizeBilinear(squeezed, [256, 256]);
+    return resized;
+  });
 }
 
 function getTensorShape(_data) {
@@ -81,9 +84,8 @@ function getTensorShape(_data) {
   return shape;
 }
 
-//const model = loadModel(); //.then(() => predict(video, outputCanvas));
-
 function draw() {
-  //predict(video, outputCanvas);
-  glio.draw(video, video);
+  predict(model, glio.pixels);
 }
+
+loadModel();
