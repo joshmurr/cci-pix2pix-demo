@@ -5,12 +5,14 @@ import './styles.scss';
 
 let MODEL_INPUT_SHAPE;
 let WEBCAM_ACTIVE = false;
+let PLAY = false;
 const MODELS = {
   Med_flowers_256_8: 'models/flowers_256_8/model.json',
 };
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
+const timer = document.getElementById('timer');
 const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
@@ -19,6 +21,15 @@ const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => webcamHandler.initCam());
 buttons[1].addEventListener('click', (e) => webcamHandler.stopCam());
 buttons[2].addEventListener('click', (e) => draw());
+buttons[3].addEventListener('click', (e) => {
+  PLAY = !PLAY;
+  if (PLAY) {
+    buttons[3].innerText = 'Stop';
+    draw();
+  } else {
+    buttons[3].innerText = 'Play';
+  }
+});
 
 let model;
 async function loadModel(modelID = 'Med_flowers_256_8') {
@@ -85,7 +96,13 @@ function getTensorShape(_data) {
 }
 
 function draw() {
+  const start = performance.now();
   predict(model, glio.pixels);
+  timer.innerText = performance.now() - start;
+  if (PLAY) {
+    console.log('playing');
+    requestAnimationFrame(draw);
+  }
 }
 
 loadModel();

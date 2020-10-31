@@ -56,7 +56,7 @@ export default class GL_IO {
 
     void main() {
       gl_Position = a_position;
-      v_texcoord = a_texcoord;
+      v_texcoord = a_texcoord * vec2(1.0, -1.0);
     }
     `;
 
@@ -84,7 +84,7 @@ export default class GL_IO {
     );
     this.output_program = this.createProgram(
       this.gl,
-      this.input_vs,
+      this.output_vs,
       this.output_fs
     );
 
@@ -341,6 +341,7 @@ export default class GL_IO {
   draw(_in, _out) {
     this.gl.bindVertexArray(this.vao);
 
+    /* PRE-PROCESS INPUT AND DRAW INTO FRAMEBUFFER */
     this.gl.useProgram(this.input_program);
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);
     this.gl.uniform1i(this.u_input_tex, 0);
@@ -368,8 +369,14 @@ export default class GL_IO {
       this.pixel_store
     );
 
-    this.gl.useProgram(this.output_program);
+    /* RENDER INPUT */
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+    this.gl.viewport(0, 0, this.gl.canvas.width / 2, this.gl.canvas.height);
+    this.gl.scissor(0, 0, this.gl.canvas.width / 2, this.gl.canvas.height);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.verts.length / 2);
+
+    /* RENDER OUTPUT */
+    this.gl.useProgram(this.output_program);
     this.gl.uniform1i(this.u_output_tex, 0);
     this.gl.activeTexture(this.gl.TEXTURE0 + 0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.output_texture);
