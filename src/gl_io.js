@@ -1,10 +1,9 @@
-export default class GL_IO {
-  constructor(gl) {
-    this.gl = gl;
+import GL_Core from './gl_core.js';
+import GL_Program from './gl_program.js';
 
-    if (!this.gl) {
-      console.error('No WebGL2 support in your chosen browser!');
-    }
+export default class GL_IO extends GL_Core {
+  constructor(gl) {
+    super(gl);
 
     this.process_vs = `#version 300 es
     in vec4 a_position;
@@ -54,7 +53,7 @@ export default class GL_IO {
       int k=0;
       for(int y=-3; y<3; y++){
         for(int x=-3; x<3; x++){
-          sum += get(p + vec2(x, y)/256.0) * u_kernel[k++];
+          sum += get(p + vec2(x, y)/u_resolution) * u_kernel[k++];
         }
       }
       return sum / u_kernelWeight;
@@ -68,6 +67,79 @@ export default class GL_IO {
       outColor = vec4(vec3(c), 1.0);
     }
     `;
+
+    this.testProg = new GL_Program(gl, {
+      vs_source: `#version 300 es
+    in vec4 a_position;
+    in vec2 a_texcoord;
+
+    out vec2 v_texcoord;
+
+    void main() {
+      gl_Position = a_position;
+      v_texcoord = a_texcoord;// * vec2(3.0 / 4.0, 1.0);
+    }
+    `,
+
+      fs_source: `#version 300 es
+    precision highp float;
+     
+    uniform sampler2D u_texture;
+    uniform vec2 u_resolution;
+    uniform vec2 u_texturesize;
+    uniform float u_kernel[9];
+    uniform float u_kernelWeight;
+
+    in vec2 v_texcoord;
+    out vec4 outColor;
+
+    float get(vec2 p){
+      return texture(u_texture, p).r;
+    }
+
+    float convolve(vec2 p){
+      float sum = 0.0;
+      int k=0;
+      for(int y=-1; y<1; y++){
+        for(int x=-1; x<1; x++){
+          sum += get(p + vec2(x, y)/u_resolution) * u_kernel[k++];
+        }
+      }
+      return sum / u_kernelWeight;
+    }
+          
+
+    void main() {
+      float c = convolve(v_texcoord) * 1.3;
+      outColor = vec4(vec3(c), 1.0);
+    }
+    `,
+      attributes: ['a_position', 'a_texcoord'],
+      uniforms: [
+        {
+          name: 'u_kernel[0]',
+          location: null,
+          type: 'uniform1fv',
+          value: [[0, 1, 0, 1, 1, 1, 0, 1, 0]],
+        },
+        {
+          name: 'u_kernelWeight',
+          location: null,
+          type: 'uniform1f',
+          value: [this.computeKernelWeight([0, 1, 0, 1, 1, 1, 0, 1, 0])],
+        },
+      ],
+      in: {
+        w: 64,
+        h: 64,
+        d: 1,
+      },
+      out: {
+        w: 256,
+        h: 256,
+        d: 1,
+      },
+    });
 
     this.output_vs = `#version 300 es
     uniform vec2 u_resolution;
@@ -101,16 +173,8 @@ export default class GL_IO {
     this.tex_coords = [ 0,  1,  0, 0,  1,  1,    0, 0, 1,  0, 1,  1]; //prettier-ignore
 
     /* CREATE SHADER PROGRAMS */
-    this.process_program = this.createProgram(
-      this.gl,
-      this.process_vs,
-      this.process_fs
-    );
-    this.output_program = this.createProgram(
-      this.gl,
-      this.output_vs,
-      this.output_fs
-    );
+    this.process_program = this.createProgram(this.process_vs, this.process_fs);
+    this.output_program = this.createProgram(this.output_vs, this.output_fs);
 
     /* ATTRIBUTE LOCATIONS */
     this.process_posAttrLoc = this.gl.getAttribLocation( this.process_program, 'a_position'); // prettier-ignore
@@ -214,6 +278,15 @@ export default class GL_IO {
         0.019518, 0.021564, 0.022893, 0.023354, 0.022893, 0.021564, 0.019518,
         0.018385, 0.020312, 0.021564, 0.021998, 0.021564, 0.020312, 0.018385,
         0.016641, 0.018385, 0.019518, 0.019911, 0.019518, 0.018385, 0.016641,
+      ],
+      gaussianBlur2: [
+        0.016641, 0.018385, 0.019518, 0.019911, 0.019518, 0.018385, 0.016641,
+        0.018385, 0.020312, 0.021564, 0.021998, 0.021564, 0.020312, 0.018385,
+        0.019518, 0.021564, 0.022893, 0.023354, 0.022893, 0.021564, 0.019518,
+        0.019911, 0.021998, 0.023354, 0.023824, 0.023354, 0.021998, 0.019911,
+        0.019518, 0.021564, 0.022893, 0.023354, 0.022893, 0.021564, 0.019518,
+        0.018385, 0.020312, 0.021564, 0.021998, 0.021564, 0.020312, 0.018385,
+        0.016641, 0.018385, 0.019518, 0.019911, 0.019518, 0.018385, 0.016641,
       ]
 
       //gaussianBlur: [
@@ -266,110 +339,9 @@ export default class GL_IO {
     this.count = 1;
   }
 
-  createFramebuffer(_tex) {
-    const fb = this.gl.createFramebuffer();
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
-    this.gl.framebufferTexture2D(
-      this.gl.FRAMEBUFFER,
-      this.gl.COLOR_ATTACHMENT0,
-      this.gl.TEXTURE_2D,
-      _tex,
-      0
-    );
-    return fb;
-  }
-
-  createShader(gl, source, type) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const info = gl.getShaderInfoLog(shader);
-      throw 'Could not compile WebGL program. \n\n' + info;
-    }
-    return shader;
-  }
-
-  createProgram(gl, vsSource, fsSource) {
-    const shaderProgram = gl.createProgram();
-    const vertexShader = this.createShader(this.gl, vsSource, gl.VERTEX_SHADER);
-    const fragmentShader = this.createShader(
-      this.gl,
-      fsSource,
-      gl.FRAGMENT_SHADER
-    );
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    if (gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      return shaderProgram;
-    }
-
-    console.error('Error creating shader program!');
-    gl.deleteProgram(shaderProgram);
-  }
-
-  createTexture(_opts) {
-    let opts = {
-      internalFormat: 'RGB8',
-      format: 'RGB',
-      width: 256,
-      height: 256,
-      dtype: 'UNSIGNED_BYTE',
-    };
-    if (_opts) Object.assign(opts, _opts);
-
-    const texture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE0 + 0);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.texImage2D(
-      this.gl.TEXTURE_2D,
-      0,
-      this.gl[opts.internalFormat],
-      opts.width,
-      opts.height,
-      0,
-      this.gl[opts.format],
-      this.gl[opts.dtype],
-      null
-    );
-
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT); // prettier-ignore
-
-    return texture;
-  }
-
-  deleteTexture() {
-    this.gl.deleteTexture(this.process_texture);
-    this.gl.deleteTexture(this.output_texture);
-  }
-
   computeKernelWeight(kernel) {
     const weight = kernel.reduce((prev, curr) => prev + curr);
     return weight < 0 ? 1 : weight;
-  }
-
-  resize() {
-    // https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    var realToCSSPixels = window.devicePixelRatio;
-
-    var displayWidth = Math.floor(this.gl.canvas.clientWidth * realToCSSPixels);
-    var displayHeight = Math.floor(
-      this.gl.canvas.clientHeight * realToCSSPixels
-    );
-
-    if (
-      this.gl.canvas.width !== displayWidth ||
-      this.gl.canvas.height !== displayHeight
-    ) {
-      this.gl.canvas.width = displayWidth;
-      this.gl.canvas.height = displayHeight;
-    }
   }
 
   get pixels() {
@@ -378,6 +350,7 @@ export default class GL_IO {
 
   draw(_in, _out) {
     this.gl.enable(this.gl.SCISSOR_TEST);
+
     this.gl.bindVertexArray(this.vao);
 
     //let i = 0;
@@ -396,11 +369,10 @@ export default class GL_IO {
       _in
     );
 
-    this.gl.uniform2f(this.process_uniforms.textureSize, 256, 256);
-    this.gl.uniform2f(this.process_uniforms.resolution, 256, 256);
-
     this.gl.viewport(0, 0, 256, 256);
     this.gl.scissor(0, 0, 256, 256);
+    this.gl.uniform2f(this.process_uniforms.textureSize, 256, 256);
+    this.gl.uniform2f(this.process_uniforms.resolution, 256, 256);
 
     let i = 0;
     //prettier-ignore
@@ -412,6 +384,7 @@ export default class GL_IO {
       this.gl.uniform1fv(this.process_uniforms.kernel, kernel);
       this.gl.uniform1f(this.process_uniforms.kernelWeight, this.computeKernelWeight(kernel));
       this.gl.drawArrays(this.gl.TRIANGLES, 0, this.verts.length / 2);
+
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.process_textures[i % 2]);
       //this.count++;
       ++i;
@@ -428,7 +401,6 @@ export default class GL_IO {
       this.pixel_store
     );
 
-    //this.gl.bindTexture(this.gl.TEXTURE_2D, this.input_texture);
     /* RENDER INPUT */
     this.gl.useProgram(this.output_program);
     this.gl.uniform1i(this.output_uniforms.texture, 0);
@@ -441,7 +413,10 @@ export default class GL_IO {
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.verts.length / 2);
 
     /* RENDER OUTPUT */
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.output_texture);
+    //this.gl.bindTexture(this.gl.TEXTURE_2D, this.output_texture);
+
+    this.testProg.draw(_in);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.testProg.output);
     this.gl.viewport(
       this.gl.canvas.width / 2,
       0,

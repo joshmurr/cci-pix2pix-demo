@@ -109,4 +109,4 @@ function draw() {
   }
 }
 
-loadModel('Big_flowers_256_64');
+loadModel('Med_flowers_256_8');
