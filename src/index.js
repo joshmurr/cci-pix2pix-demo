@@ -8,6 +8,7 @@ let WEBCAM_ACTIVE = false;
 let PLAY = false;
 const MODELS = {
   Med_flowers_256_8: 'models/flowers_256_8/model.json',
+  Big_flowers_256_64: 'models/greyscale2flowers/uncompressed/model.json',
 };
 
 const video = document.getElementById('video');
@@ -19,7 +20,10 @@ const webcamHandler = new WebcamHandler(video);
 
 const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => webcamHandler.initCam());
-buttons[1].addEventListener('click', (e) => webcamHandler.stopCam());
+buttons[1].addEventListener('click', (e) => {
+  PLAY = false;
+  webcamHandler.stopCam();
+});
 buttons[2].addEventListener('click', (e) => draw());
 buttons[3].addEventListener('click', (e) => {
   PLAY = !PLAY;
@@ -105,4 +109,4 @@ function draw() {
   }
 }
 
-loadModel();
+loadModel('Big_flowers_256_64');
