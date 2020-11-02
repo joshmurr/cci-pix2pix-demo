@@ -64,8 +64,62 @@ body {
   display: flex;
   justify-content: center;
   margin-bottom: 2rem;
+  button {
+    background-color: lightgrey;
+    border: none;
+    color: black;
+    padding: 10px;
+    margin: 0 0.2rem;
+    text-align: center;
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+    outline: none !important;
+
+    &:first-child:hover {
+      background-color: #0f0;
+    }
+
+    &:nth-child(2):hover {
+      background-color: #f00;
+    }
+
+    &:nth-child(3):hover {
+      background-color: #ff0;
+    }
+
+    &:nth-child(4):hover {
+      background-color: #00f;
+    }
+
+    &:last-child:hover {
+      background-color: #f0f;
+    }
+  }
+
+  .pressed {
+    background-color: grey;
+  }
 }
 
 video {
   display: none;
+}
+
+table {
+  td {
+    text-align: center;
+  }
+
+  visibility: visible;
+  opacity: 1;
+  transition: 0.2s;
+}
+.hide {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.text {
+  margin: 1rem 0;
 }

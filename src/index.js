@@ -6,6 +6,7 @@ import './styles.scss';
 let MODEL_INPUT_SHAPE;
 let WEBCAM_ACTIVE = false;
 let PLAY = false;
+let STATS = false;
 const MODELS = {
   med: 'models/flowers_256_8/model.json',
   big: 'models/greyscale2flowers/uncompressed/model.json',
@@ -18,22 +19,47 @@ const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
 
+/* BUTTONS */
 const buttons = document.getElementsByTagName('button');
-buttons[0].addEventListener('click', (e) => webcamHandler.initCam());
+buttons[0].addEventListener('click', (e) => {
+  buttons[0].classList.toggle('pressed', true);
+  buttons[1].classList.toggle('pressed', false);
+  webcamHandler.initCam();
+});
 buttons[1].addEventListener('click', (e) => {
-  PLAY = false;
+  buttons[0].classList.toggle('pressed', false);
+  buttons[1].classList.toggle('pressed', true);
   webcamHandler.stopCam();
+  playHandler('stop');
 });
 buttons[2].addEventListener('click', (e) => draw());
-buttons[3].addEventListener('click', (e) => {
-  PLAY = !PLAY;
-  if (PLAY) {
+buttons[3].addEventListener('click', playHandler);
+buttons[4].addEventListener('click', statsHandler);
+
+function playHandler(_val) {
+  PLAY = _val === 'stop' ? false : !PLAY;
+  if (PLAY && video.srcObject) {
     buttons[3].innerText = 'Stop';
-    draw();
+    if (STATS) requestAnimationFrame(drawWithStats);
+    else requestAnimationFrame(draw);
   } else {
     buttons[3].innerText = 'Play';
   }
-});
+}
+
+function statsHandler() {
+  STATS = !STATS;
+  buttons[4].classList.toggle('pressed');
+  let table = document.getElementsByTagName('table')[0];
+  table.classList.toggle('hide');
+}
+
+/* STATS */
+const step_time = document.getElementById('step_time');
+const avg_time = document.getElementById('avg_time');
+const fps = document.getElementById('fps');
+let time_bank = new Float32Array(10);
+let time_counter = 0;
 
 let model;
 async function loadModel(modelID = 'med') {
@@ -73,6 +99,8 @@ async function predict(model, pixels) {
   const data = await output.data();
 
   glio.draw(video, data);
+
+  output.dispose();
 }
 
 async function postProcessTF(logits) {
@@ -100,11 +128,28 @@ function getTensorShape(_data) {
 }
 
 function draw() {
+  predict(model, glio.pixels);
+  if (PLAY) {
+    if (STATS) requestAnimationFrame(drawWithStats);
+    else requestAnimationFrame(draw);
+  }
+}
+
+function drawWithStats() {
   const start = performance.now();
   predict(model, glio.pixels);
-  timer.innerText = performance.now() - start;
+  const time = performance.now() - start;
+  step_time.innerText = Math.round((time_bank[time_counter++ % 10] = time));
+
+  if (time_counter % 10 === 0) {
+    const time_for_ten = time_bank.reduce((prev, curr) => prev + curr);
+    avg_time.innerText = Math.round(time_for_ten / 10);
+    fps.innerText = Math.floor((10 / time_for_ten) * 1000);
+  }
+
   if (PLAY) {
-    requestAnimationFrame(draw);
+    if (STATS) requestAnimationFrame(drawWithStats);
+    else requestAnimationFrame(draw);
   }
 }
 

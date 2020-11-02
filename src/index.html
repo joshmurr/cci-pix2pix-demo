@@ -19,16 +19,30 @@
       </div>
       <div class="buttons">
         <button type="button">Init Webcam</button>
-        <button type="button">Stop Webcam</button>
+        <button type="button" class="pressed">Stop Webcam</button>
         <button type="button">Step</button>
         <button type="button">Play</button>
+        <button type="button">Stats</button>
       </div>
-      <h5 id="timer"></h5>
-      <p>
-        Some text some text. Some text some text. Some text some text. Some text
-        some text. Some text some text. Some text some text. Some text some
-        text. Some text some text.
-      </p>
+      <table class="hide">
+        <tr>
+          <th>Step (ms)</th>
+          <th>Average (ms)</th>
+          <th>FPS</th>
+        </tr>
+        <tr>
+          <td id="step_time">-</td>
+          <td id="avg_time">-</td>
+          <td id="fps">-</td>
+        </tr>
+      </table>
+      <div class="text">
+        <p>
+          Some text some text. Some text some text. Some text some text. Some
+          text some text. Some text some text. Some text some text. Some text
+          some text. Some text some text.
+        </p>
+      </div>
     </div>
   </body>
 </html>

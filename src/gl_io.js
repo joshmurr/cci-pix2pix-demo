@@ -237,10 +237,12 @@ export default class GL_IO extends GL_Core {
   draw(_in, _out) {
     this.gl.enable(this.gl.SCISSOR_TEST);
 
+    /* PREPROCESS PIPELINE */
     this.blur1.draw(_in);
     this.blur2.draw(this.blur1.output);
     this.blur3.draw(this.blur2.output);
     this.upscale.draw(this.blur3.output);
+
     /* SAVE PROCESSED INPUT INTO this.pixel_store */
     this.gl.readPixels(
       0,
@@ -252,7 +254,8 @@ export default class GL_IO extends GL_Core {
       this.pixel_store
     );
 
-    this.output.draw(this.upscale.output, 0, 0);
+    /* RENDER OUTPUT FROM MODEL */
+    this.output.draw(_in, 0, 0);
     this.output.draw(_out, 512, 0);
   }
 }
