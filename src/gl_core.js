@@ -51,6 +51,7 @@ export default class GL_Core {
       width: 1,
       height: 1,
       dtype: 'UNSIGNED_BYTE',
+      filtering: 'NEAREST',
     };
     if (_opts) Object.assign(opts, _opts);
 
@@ -69,10 +70,10 @@ export default class GL_Core {
       null
     );
 
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT); // prettier-ignore
-    this.gl.texParameteri( this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT); // prettier-ignore
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl[opts.filtering]); // prettier-ignore
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl[opts.filtering]); // prettier-ignore
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT); // prettier-ignore
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT); // prettier-ignore
 
     return texture;
   }

@@ -126,7 +126,7 @@ export default class GL_Program extends GL_Core {
     }
   }
 
-  draw(_input) {
+  draw(_input, _offset_x = 0, _offset_y = 0) {
     this.gl.bindVertexArray(this.vao);
     this.gl.useProgram(this.program);
 
@@ -163,24 +163,13 @@ export default class GL_Program extends GL_Core {
       }
     }
 
-    this.gl.viewport(
-      this.opts.out.offset_x,
-      this.opts.out.offset_y,
-      this.opts.out.w,
-      this.opts.out.h
-    );
-    this.gl.scissor(
-      this.opts.out.offset_x,
-      this.opts.out.offset_y,
-      this.opts.out.w,
-      this.opts.out.h
-    );
+    this.gl.viewport(_offset_x, _offset_y, this.opts.out.w, this.opts.out.h);
+    this.gl.scissor(_offset_x, _offset_y, this.opts.out.w, this.opts.out.h);
 
     this.gl.bindFramebuffer(
       this.gl.FRAMEBUFFER,
       this.opts.fbo ? this.fbo : null
     );
-    //console.log(this.gl.getParameter(this.gl.FRAMEBUFFER_BINDING));
     this.gl.drawArrays(this.gl.TRIANGLES, 0, this.opts.a_position.length / 2);
   }
 }
