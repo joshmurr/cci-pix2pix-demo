@@ -8,6 +8,9 @@
     <div class="wrapper">
       <h1><%= htmlWebpackPlugin.options.title %></h1>
       <div class="container">
+        <div id="overlay">
+          <p>Loading Model...</p>
+        </div>
         <video
           id="video"
           width="256"
@@ -17,12 +20,12 @@
         ></video>
         <canvas id="canvas" width="1024" height="512"></canvas>
       </div>
-      <div class="buttons">
-        <button type="button">Init Webcam</button>
-        <button type="button" class="pressed">Stop Webcam</button>
-        <button type="button">Step</button>
-        <button type="button">Play</button>
-        <button type="button">Stats</button>
+      <div id="buttons">
+        <button type="button" class="no-click">Init Webcam</button>
+        <button type="button" class="pressed no-click">Stop Webcam</button>
+        <button type="button" class="no-click">Step</button>
+        <button type="button" class="no-click">Play</button>
+        <button type="button" class="no-click">Stats</button>
       </div>
       <table class="hide">
         <tr>

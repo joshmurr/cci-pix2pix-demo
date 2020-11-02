@@ -59,7 +59,7 @@ body {
     }
   }
 }
-.buttons {
+#buttons {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -72,7 +72,6 @@ body {
     margin: 0 0.2rem;
     text-align: center;
     display: inline-block;
-    cursor: pointer;
     text-decoration: none;
     outline: none !important;
 
@@ -102,6 +101,14 @@ body {
   }
 }
 
+.no-click {
+  cursor: not-allowed;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
 video {
   display: none;
 }
@@ -121,5 +128,19 @@ table {
 }
 
 .text {
+  display: none;
   margin: 1rem 0;
+}
+
+#overlay {
+  position: absolute;
+  background-color: lightgrey;
+  width: 1024px;
+  height: 512px;
+  //opacity: 0.2;
+  display: grid;
+  align-content: center;
+  p {
+    opacity: 1;
+  }
 }

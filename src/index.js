@@ -7,6 +7,7 @@ let MODEL_INPUT_SHAPE;
 let WEBCAM_ACTIVE = false;
 let PLAY = false;
 let STATS = false;
+let MODEL_LOADED = false;
 const MODELS = {
   med: 'models/flowers_256_8/model.json',
   big: 'models/greyscale2flowers/uncompressed/model.json',
@@ -20,6 +21,7 @@ const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
 
 /* BUTTONS */
+const buttons_container = document.getElementById('buttons');
 const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => {
   buttons[0].classList.toggle('pressed', true);
@@ -40,18 +42,13 @@ function playHandler(_val) {
   PLAY = _val === 'stop' ? false : !PLAY;
   if (PLAY && video.srcObject) {
     buttons[3].innerText = 'Stop';
+    buttons[3].classList.add('pressed');
     if (STATS) requestAnimationFrame(drawWithStats);
     else requestAnimationFrame(draw);
   } else {
     buttons[3].innerText = 'Play';
+    buttons[3].classList.remove('pressed');
   }
-}
-
-function statsHandler() {
-  STATS = !STATS;
-  buttons[4].classList.toggle('pressed');
-  let table = document.getElementsByTagName('table')[0];
-  table.classList.toggle('hide');
 }
 
 /* STATS */
@@ -60,6 +57,16 @@ const avg_time = document.getElementById('avg_time');
 const fps = document.getElementById('fps');
 let time_bank = new Float32Array(10);
 let time_counter = 0;
+
+function statsHandler() {
+  STATS = !STATS;
+  buttons[4].classList.toggle('pressed');
+  let table = document.getElementsByTagName('table')[0];
+  table.classList.toggle('hide');
+}
+
+/* OVERLAY */
+const overlay = document.getElementById('overlay');
 
 let model;
 async function loadModel(modelID = 'med') {
@@ -79,9 +86,14 @@ async function loadModel(modelID = 'med') {
   );
 
   model.predict(tf.zeros(MODEL_INPUT_SHAPE)).dispose();
+
+  MODEL_LOADED = true;
+  allowUI();
+  console.log('MODEL LOADED');
 }
 
 async function predict(model, pixels) {
+  // Take only Red value from RGBA data
   const red = (el, i, arr) => i % 4 === 0;
 
   const logits = tf.tidy(() => {
@@ -127,6 +139,17 @@ function getTensorShape(_data) {
   return shape;
 }
 
+function allowUI() {
+  overlay.classList.add('hide');
+  for (const n in buttons) {
+    const button = buttons[n];
+    if (button instanceof HTMLElement) {
+      button.classList.remove('no-click');
+      button.classList.add('clickable');
+    }
+  }
+}
+
 function draw() {
   predict(model, glio.pixels);
   if (PLAY) {
@@ -153,4 +176,4 @@ function drawWithStats() {
   }
 }
 
-loadModel('big');
+loadModel('med');
