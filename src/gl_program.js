@@ -164,6 +164,8 @@ export default class GL_Program extends GL_Core {
       }
     }
 
+    //console.log(this.getActiveUniforms(this.program));
+
     this.gl.viewport(_offset_x, _offset_y, this.opts.out.w, this.opts.out.h);
     this.gl.scissor(_offset_x, _offset_y, this.opts.out.w, this.opts.out.h);
 

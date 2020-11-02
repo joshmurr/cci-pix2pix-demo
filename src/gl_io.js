@@ -41,7 +41,7 @@ const blur_fs = `#version 300 es
       }
 
       void main() {
-      float c = convolve(v_texcoord) * 1.99;
+      float c = convolve(v_texcoord) * 2.2;
       outColor = vec4(vec3(c), 1.0);
       //outColor = texture(u_input, v_texcoord);
       }
@@ -50,6 +50,7 @@ const blur_fs = `#version 300 es
 const gaussian1 = [ 0.045, 0.122, 0.045, 0.122, 0.332, 0.122, 0.045, 0.122, 0.045, ]; //prettier-ignore
 const gaussian2 = [1, 2, 1, 2, 4, 2, 1, 2, 1];
 const gaussian3 = [0, 1, 0, 1, 1, 1, 0, 1, 0];
+const CONTRAST = 10;
 
 export default class GL_IO extends GL_Core {
   constructor(gl) {
@@ -165,13 +166,27 @@ export default class GL_IO extends GL_Core {
       uniform sampler2D u_input;
       uniform vec2 u_inputsize;
       uniform vec2 u_resolution;
+      uniform float u_factor;
       out vec4 outColor;
 
+      float contrast(float v){
+        return u_factor*(v-0.5) + 0.5;      
+      }
+
       void main() {
-        outColor = texture(u_input, v_texcoord) + 0.2;
+        outColor = texture(u_input, v_texcoord) * 1.7;
+        outColor.r = contrast(outColor.r);
       }
       `,
       attributes: ['a_position', 'a_texcoord'],
+      uniforms: [
+        {
+          name: 'u_factor',
+          location: null,
+          type: 'uniform1f',
+          value: [(259 * (255 + CONTRAST)) / (255 * (259 - CONTRAST))],
+        },
+      ],
       in: {
         w: 32,
         h: 32,
