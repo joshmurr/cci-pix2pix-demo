@@ -104,7 +104,6 @@ function draw() {
   predict(model, glio.pixels);
   timer.innerText = performance.now() - start;
   if (PLAY) {
-    console.log('playing');
     requestAnimationFrame(draw);
   }
 }

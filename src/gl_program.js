@@ -13,7 +13,7 @@ export default class GL_Program extends GL_Core {
 
       void main() {
         gl_Position = a_position;
-        v_texcoord = a_texcoord * vec2(1.0, -1.0);
+        v_texcoord = a_texcoord;
       }
       `,
 
@@ -21,14 +21,13 @@ export default class GL_Program extends GL_Core {
       precision highp float;
        
       in vec2 v_texcoord;
-      uniform sampler2D u_texture;
-      uniform vec2 u_textureSize;
+      uniform sampler2D u_input;
+      uniform vec2 u_inputsize;
       uniform vec2 u_resolution;
       out vec4 outColor;
 
       void main() {
-        outColor = texture(u_texture, v_texcoord);
-        //outColor = vec4(1.0, 0.0, 0.0, 1.0);
+        outColor = texture(u_input, v_texcoord);
       }
       `,
       a_position: [-1, -1, -1, 1, 1, -1, -1, 1, 1, 1, 1, -1],
@@ -45,11 +44,19 @@ export default class GL_Program extends GL_Core {
         w: 32,
         h: 32,
         d: 1, // Num Channels
+        offset_x: 0,
+        offset_y: 0,
       },
     };
     if (_opts) Object.assign(this.opts, _opts);
 
     const defaultUniforms = [
+      {
+        name: 'u_input',
+        location: null,
+        type: 'uniform1i',
+        value: [0],
+      },
       {
         name: 'u_resolution',
         location: null,
@@ -57,7 +64,7 @@ export default class GL_Program extends GL_Core {
         value: [this.opts.out.w, this.opts.out.h],
       },
       {
-        name: 'u_texturesize',
+        name: 'u_inputsize',
         location: null,
         type: 'uniform2f',
         value: [this.opts.in.w, this.opts.in.h],
@@ -104,24 +111,31 @@ export default class GL_Program extends GL_Core {
     });
 
     /* SETUP TEXTURES & FBO */
-    this.input_texture = this.createTexture(this.getTextureOpts(_opts.in.d));
-    this.output_texture = this.createTexture(this.getTextureOpts(_opts.out.d));
-    this.fbo = this.createFramebuffer(this.output_texture);
+    this.input_texture = this.createTexture({
+      width: _opts.in.w,
+      height: _opts.in.h,
+      ...this.getTextureOpts(_opts.in.d),
+    });
+    if (_opts.fbo) {
+      this.output_texture = this.createTexture({
+        width: _opts.out.w,
+        height: _opts.out.h,
+        ...this.getTextureOpts(_opts.out.d),
+      });
+      this.fbo = this.createFramebuffer(this.output_texture);
+    }
   }
 
   draw(_input) {
     this.gl.bindVertexArray(this.vao);
     this.gl.useProgram(this.program);
 
-    for (const u in this.uniforms) {
-      const uniform = this.uniforms[u];
+    this.uniforms.forEach((uniform) => {
       this.gl[uniform.type](uniform.location, ...uniform.value);
-    }
+    });
 
-    this.gl.viewport(0, 0, this.opts.out.w, this.opts.out.h);
     if (_input) {
       if (_input instanceof HTMLElement) {
-        // Update
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.input_texture);
         this.gl.texImage2D(
           this.gl.TEXTURE_2D,
@@ -131,39 +145,42 @@ export default class GL_Program extends GL_Core {
           this.gl.UNSIGNED_BYTE,
           _input
         );
+      } else if (_input instanceof Float32Array) {
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.input_texture);
+        this.gl.texImage2D(
+          this.gl.TEXTURE_2D,
+          0,
+          this.gl.RGB32F,
+          this.opts.in.w,
+          this.opts.in.h,
+          0,
+          this.gl.RGB,
+          this.gl.FLOAT,
+          _input
+        );
       } else if (_input instanceof WebGLTexture) {
         this.gl.bindTexture(this.gl.TEXTURE_2D, _input);
       }
     }
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.opts.a_position.length / 2);
-  }
 
-  updateTexture(_tex, _data) {
-    this.gl.texImage2D(
-      this.gl.TEXTURE_2D,
-      0,
-      this.gl.R8,
-      this.gl.RED,
-      this.gl.UNSIGNED_BYTE,
-      _data
+    this.gl.viewport(
+      this.opts.out.offset_x,
+      this.opts.out.offset_y,
+      this.opts.out.w,
+      this.opts.out.h
     );
-  }
+    this.gl.scissor(
+      this.opts.out.offset_x,
+      this.opts.out.offset_y,
+      this.opts.out.w,
+      this.opts.out.h
+    );
 
-  getTextureOpts(_d) {
-    switch (_d) {
-      case 1:
-        return {
-          internalFormat: 'R8',
-          format: 'RED',
-          dtype: 'UNSIGNED_BYTE',
-        };
-      case 2:
-        return {
-          internalFormat: 'RGB32F',
-          format: 'RGB',
-          dtype: 'FLOAT',
-        };
-    }
+    this.gl.bindFramebuffer(
+      this.gl.FRAMEBUFFER,
+      this.opts.fbo ? this.fbo : null
+    );
+    //console.log(this.gl.getParameter(this.gl.FRAMEBUFFER_BINDING));
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.opts.a_position.length / 2);
   }
 }

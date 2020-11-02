@@ -107,4 +107,21 @@ export default class GL_Core {
     }
     return uniforms;
   }
+
+  getTextureOpts(_d) {
+    switch (_d) {
+      case 1:
+        return {
+          internalFormat: 'R8',
+          format: 'RED',
+          dtype: 'UNSIGNED_BYTE',
+        };
+      case 3:
+        return {
+          internalFormat: 'RGB32F',
+          format: 'RGB',
+          dtype: 'FLOAT',
+        };
+    }
+  }
 }
