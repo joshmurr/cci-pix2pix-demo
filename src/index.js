@@ -7,8 +7,8 @@ let MODEL_INPUT_SHAPE;
 let WEBCAM_ACTIVE = false;
 let PLAY = false;
 const MODELS = {
-  Med_flowers_256_8: 'models/flowers_256_8/model.json',
-  Big_flowers_256_64: 'models/greyscale2flowers/uncompressed/model.json',
+  med: 'models/flowers_256_8/model.json',
+  big: 'models/greyscale2flowers/uncompressed/model.json',
 };
 
 const video = document.getElementById('video');
@@ -36,7 +36,7 @@ buttons[3].addEventListener('click', (e) => {
 });
 
 let model;
-async function loadModel(modelID = 'Med_flowers_256_8') {
+async function loadModel(modelID = 'med') {
   try {
     if (modelID === 'User Upload') {
       const load = tf.io.browserFiles([userModel.json, ...userModel.weights]);
@@ -108,4 +108,4 @@ function draw() {
   }
 }
 
-loadModel('Med_flowers_256_8');
+loadModel('big');

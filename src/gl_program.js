@@ -120,6 +120,7 @@ export default class GL_Program extends GL_Core {
       this.output_texture = this.createTexture({
         width: _opts.out.w,
         height: _opts.out.h,
+        filtering: _opts.out.filtering,
         ...this.getTextureOpts(_opts.out.d),
       });
       this.fbo = this.createFramebuffer(this.output_texture);
