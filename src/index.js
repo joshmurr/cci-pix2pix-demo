@@ -9,8 +9,9 @@ let PLAY = false;
 let STATS = false;
 let MODEL_LOADED = false;
 const MODELS = {
-  med: 'models/flowers_256_8/model.json',
-  big: 'models/greyscale2flowers/uncompressed/model.json',
+  small: 'models/clouds_256_4/model.json',
+  medium: 'models/flowers_256_8/model.json',
+  large: 'models/greyscale2flowers/uncompressed/model.json',
 };
 
 const video = document.getElementById('video');
@@ -21,7 +22,7 @@ const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
 
 /* BUTTONS */
-const buttons_container = document.getElementById('buttons');
+const buttons_containers = document.getElementsByTagName('buttons');
 const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => {
   buttons[0].classList.toggle('pressed', true);
@@ -34,13 +35,21 @@ buttons[1].addEventListener('click', (e) => {
   webcamHandler.stopCam();
   playHandler('stop');
 });
-buttons[2].addEventListener('click', (e) => draw());
+buttons[2].addEventListener('click', () => {
+  overlay.classList.add('hide');
+  draw();
+});
 buttons[3].addEventListener('click', playHandler);
 buttons[4].addEventListener('click', statsHandler);
+
+buttons[5].addEventListener('click', () => loadModel('small'));
+buttons[6].addEventListener('click', () => loadModel('medium'));
+buttons[7].addEventListener('click', () => loadModel('large'));
 
 function playHandler(_val) {
   PLAY = _val === 'stop' ? false : !PLAY;
   if (PLAY && video.srcObject) {
+    overlay.classList.add('hide');
     buttons[3].innerText = 'Stop';
     buttons[3].classList.add('pressed');
     if (STATS) requestAnimationFrame(drawWithStats);
@@ -48,6 +57,7 @@ function playHandler(_val) {
   } else {
     buttons[3].innerText = 'Play';
     buttons[3].classList.remove('pressed');
+    tf.disposeVariables();
   }
 }
 
@@ -70,6 +80,15 @@ const overlay = document.getElementById('overlay');
 
 let model;
 async function loadModel(modelID = 'med') {
+  overlay.childNodes[1].innerText = 'Loading model...';
+
+  if (model) {
+    disableUI();
+    console.log('Releasing memory used by previous model.');
+    model.dispose();
+    tf.disposeVariables();
+  }
+
   try {
     if (modelID === 'User Upload') {
       const load = tf.io.browserFiles([userModel.json, ...userModel.weights]);
@@ -88,6 +107,14 @@ async function loadModel(modelID = 'med') {
   model.predict(tf.zeros(MODEL_INPUT_SHAPE)).dispose();
 
   MODEL_LOADED = true;
+
+  if (!webcamHandler.camActive) {
+    overlay.childNodes[1].innerText =
+      'Init Webcam to give the model some data.';
+  } else {
+    overlay.classList.add('hide');
+  }
+
   allowUI();
   console.log('MODEL LOADED');
 }
@@ -113,6 +140,7 @@ async function predict(model, pixels) {
   glio.draw(video, data);
 
   output.dispose();
+  logits.dispose();
 }
 
 async function postProcessTF(logits) {
@@ -129,7 +157,7 @@ function getTensorShape(_data) {
   for (const item in _data) {
     for (const input in _data[item]) {
       if (input === 'tensorShape') {
-        let input_shape = _data[item][input]['dim'];
+        const input_shape = _data[item][input]['dim'];
         for (const d in input_shape) {
           shape.push(Math.abs(input_shape[d]['size']));
         }
@@ -140,12 +168,22 @@ function getTensorShape(_data) {
 }
 
 function allowUI() {
-  overlay.classList.add('hide');
   for (const n in buttons) {
     const button = buttons[n];
     if (button instanceof HTMLElement) {
       button.classList.remove('no-click');
       button.classList.add('clickable');
+    }
+  }
+}
+
+function disableUI() {
+  overlay.classList.remove('hide');
+  for (const n in buttons) {
+    const button = buttons[n];
+    if (button instanceof HTMLElement) {
+      button.classList.add('no-click');
+      button.classList.remove('clickable');
     }
   }
 }
@@ -175,5 +213,3 @@ function drawWithStats() {
     else requestAnimationFrame(draw);
   }
 }
-
-loadModel('med');

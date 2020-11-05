@@ -11,21 +11,19 @@ html {
 }
 
 * {
-  :before,
-  :after {
+  &:before,
+  &:after {
     box-sizing: inherit;
   }
 }
 
 body {
-  //background-color: grey;
   width: 100vw;
   height: 100vh;
   overflow-x: hidden;
 }
 
 .wrapper {
-  //background-color: lightgrey;
   display: grid;
   padding: 2rem 0;
   grid-template-columns:
@@ -44,26 +42,22 @@ body {
     display: flex;
     justify-content: center;
     margin: 2rem 0;
+    grid-column: 1 / -1;
 
     @include media('>=phone', '<desktop') {
       flex-direction: column;
-      grid-column: 1 / -1;
-      * {
-        margin: 0 auto;
-      }
     }
 
     @include media('>=desktop') {
       flex-direction: row;
-      grid-column: 1 / -1;
     }
   }
 }
-#buttons {
+.buttons {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
   button {
     background-color: lightgrey;
     border: none;
@@ -99,6 +93,11 @@ body {
   .pressed {
     background-color: grey;
   }
+
+  p {
+    text-align: center;
+    margin: auto 0.5rem;
+  }
 }
 
 .no-click {
@@ -114,13 +113,13 @@ video {
 }
 
 table {
-  td {
-    text-align: center;
-  }
-
+  margin: 0.5rem 0;
   visibility: visible;
   opacity: 1;
   transition: 0.2s;
+  td {
+    text-align: center;
+  }
 }
 .hide {
   visibility: hidden;
@@ -128,11 +127,14 @@ table {
 }
 
 .text {
-  display: none;
+  display: block;
   margin: 1rem 0;
+  * {
+    margin: 1rem 0;
+  }
 }
 
-#overlay {
+.overlay {
   position: absolute;
   background-color: lightgrey;
   width: 1024px;
@@ -143,4 +145,15 @@ table {
   p {
     opacity: 1;
   }
+}
+
+.issues {
+  background-color: #faa;
+  border-radius: 5px;
+  padding: 3px;
+}
+
+span {
+  padding: 2px;
+  border-radius: 2px;
 }

@@ -8,8 +8,8 @@
     <div class="wrapper">
       <h1><%= htmlWebpackPlugin.options.title %></h1>
       <div class="container">
-        <div id="overlay">
-          <p>Loading Model...</p>
+        <div id="overlay" class="overlay">
+          <p>Choose a model size to load.</p>
         </div>
         <video
           id="video"
@@ -20,12 +20,18 @@
         ></video>
         <canvas id="canvas" width="1024" height="512"></canvas>
       </div>
-      <div id="buttons">
+      <div class="buttons">
         <button type="button" class="no-click">Init Webcam</button>
         <button type="button" class="pressed no-click">Stop Webcam</button>
         <button type="button" class="no-click">Step</button>
         <button type="button" class="no-click">Play</button>
         <button type="button" class="no-click">Stats</button>
+      </div>
+      <div class="buttons">
+        <p>Model Size:</p>
+        <button type="button" class="clickable">Small</button>
+        <button type="button" class="clickable">Medium</button>
+        <button type="button" class="clickable">Large</button>
       </div>
       <table class="hide">
         <tr>
@@ -40,11 +46,141 @@
         </tr>
       </table>
       <div class="text">
+        <h3>What is this?</h3>
         <p>
-          Some text some text. Some text some text. Some text some text. Some
-          text some text. Some text some text. Some text some text. Some text
-          some text. Some text some text.
+          This is a remake of Memo Akten's
+          <a href="http://www.memo.tv/works/learning-to-see/"
+            ><i>Learning To See</i></a
+          >
+          built specifically for the web. The model was designed and trained as
+          explained in the
+          <a href="https://arxiv.org/abs/2003.00902">paper</a> based on the
+          <a href="https://affinelayer.com/pixsrv/">Pix2Pix</a> model with some
+          changes described below.
         </p>
+        <h3>Why?</h3>
+        <p>
+          <i>Learning To See</i> has become a seminal piece in the still
+          emerging world of machine-learning driven art. When exhibited in a
+          gallery setting, visitors are presented with a camera facing straight
+          down and a grey tabletop with an arbitrary selection of everyday
+          items: a phone charger, a cloth, some keys. As the visitor plays with
+          and moves these object around, the camera feed is streamed into a
+          <a href="https://cs231n.github.io/convolutional-networks/"
+            >Convolutional Neural Network (CNN)</a
+          >
+          which manipulates the incoming data. The model compresses and reshapes
+          the image data down to an abstract representation of itself, and then
+          reforms its original structure which is projected in front of the
+          visitor as a new image.
+        </p>
+        <p>
+          As a piece it both demonstrates the capabilities and limitations of a
+          machine learning model by using a simple interaction to allow users to
+          manipulate the images produced by the model with instant feedback.
+          This interaction is key to its success as it immediately shows how a
+          model takes data as input (the image from the camera feed) and
+          transforms that data into something new (the project image).
+        </p>
+        <p>
+          My own experience of the artwork is something which has stuck with me
+          and it is the most successful artworks I have had the opportunity to
+          interact with. It helped me to understand and engage with the abstract
+          and academic world of machine learning, so the motivation behind
+          creating this is to get that same opportunity to even more people on
+          their own computers at home.
+        </p>
+        <p>
+          Machine learning on the internet is rich field of research as it poses
+          many technical challenges. Typically a neural network requires great
+          computational power to run a model of respectable size for two main
+          reasons: a large model performs many thousands, sometimes millions of
+          calculations on the input data to create an output; a pre-trained
+          model itself is a collection of weights and biases which themselves
+          take up memory on the host machine. So to create a real time
+          interactive piece such as <i>Learning to See</i> the model needs to be
+          small enough for most modern computers to be able to perform the
+          calculations necessary <i>and</i> small enough to be quickly
+          downloadable onto the users machine <i>while</i> holding enough
+          information to create an interesting output.
+        </p>
+        <h3>How does it work?</h3>
+        <p <p>
+          The Pix2Pix model is of a particular architecture which learns to find
+          patterns in pairs of images: an <u>input</u> and a <u>target</u>.
+          There are many use-cases for such a model in industry which can be
+          read about in the
+          <a href="https://arxiv.org/abs/1611.07004">pix2pix paper</a>, but the
+          core feature is that it will attempt to turn <i>any</i> input image
+          into the type of output image it is able to create.
+        </p>
+        <p>
+          For example, take a model trained only on images of flowers; any image
+          you give that model will be transformed into something similar to an
+          image of a flower because that is <u>all that model knows</u>.
+        </p>
+        <p>
+          This particular implementation used Tensorflow to train the model and
+          the Tensorflow Converter to convert the model weights into something
+          which can be uploaded to a TensorflowJS model to run the model in the
+          browser.
+        </p>
+        <p>
+          The Pix2Pix model is a
+          <a href="https://en.wikipedia.org/wiki/Generative_adversarial_network"
+            >Generative Adversarial Network</a
+          >
+          which are known to be difficult to compress due to their unstable
+          nature in training, so a key factor in producing a model small enough
+          to be suitable for the web is simply to greatly reduce the number of
+          trainable parameters in the model <i>before</i> training begins.
+        </p>
+        <p>
+          Secondly, and key to the success of the model running in the browser,
+          is a custom made WebGL wrapper for the model which makes the model
+          more suitable for video. There are a number of WebGL shader programs
+          which handle the pre- and post-processing of the data being
+          manipulated by the model, which is handled by TensorflowJS.
+          TensorflowJS itself has good support for still image use-cases, but
+          these are slow implementations of image manipulation algorithms which
+          turned out to be unsuitable.
+        </p>
+        <h3>Why is the input image red?</h3>
+        <p>
+          A single channel image when working with WebGL must be
+          <span style="background-color: #faa">R</span>,
+          <span style="background-color: #afa">G</span> or
+          <span style="background-color: #aaf">B</span>. To get black and white
+          you need all three which is 3 times as much data. So the webcam feed
+          is sent as a red image which needs only one byte of data per pixel.
+        </p>
+        <h3 class="issues">Know Issues</h3>
+        <p class="issues">
+          <u>This is a memory hog.</u> If you run
+          <a href="https://htop.dev/">HTOP</a> or something similar and run the
+          demo you will see it eating up your memory. This is clearly a pretty
+          big issue. As far as I can see from looking at memory profiles is that
+          most of this is internal memory which is managed by TensorflowJS. The
+          TensorflowJS API gives you access to
+          <code>tf.disposeVariables()</code>, <code>tf.dispose()</code> and
+          encourages the use of <code>tf.tidy()</code> to help with memory
+          management (<a
+            href="https://www.tensorflow.org/js/guide/tensors_operations#memory"
+            >see here for more information</a
+          >). It seems like I have done all that I can as a user of TensorflowJS
+          to manage memory, but clearly it is not releasing memory as it runs.
+          Closing the browser tab is enough to get the memory back to your
+          machine but right now it remains an open issue.
+        </p>
+        <h3>More Info</h3>
+        <p>
+          The code for this demo is
+          <a href="https://github.com/joshmurr/cci-pix2pix-demo"
+            >available here</a
+          >
+          and a more in depth write up will appear in the coming weeks.
+        </p>
+        <p>Made by <a href="https://www.joshmurr.com/">Josh Murr</a></p>
       </div>
     </div>
   </body>
