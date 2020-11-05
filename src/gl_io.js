@@ -222,7 +222,7 @@ export default class GL_IO extends GL_Core {
 
     this.pixel_store = new Uint8Array(256 * 256 * 4);
 
-    this.resize();
+    //this.resize();
   }
 
   computeKernelWeight(kernel) {
