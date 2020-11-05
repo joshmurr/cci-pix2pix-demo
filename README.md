@@ -1,4 +1,4 @@
-![Screenshot]('./screenshot.png')
+![Screenshot](./screenshot.png)
 
 > ### Text below is taken from the online demo which is [running here][demo].
 
