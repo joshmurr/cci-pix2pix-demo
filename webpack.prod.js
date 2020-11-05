@@ -6,8 +6,8 @@ module.exports = merge(common, {
   mode: 'production',
   plugins: [
     new MiniCssExtractPlugin({
-      filename: devMode ? '[name].css' : '[name].[chunkhash].css',
-      chunkFilename: devMode ? '[id].css' : '[id].[chunkhash].css',
+      filename: '[name].[chunkhash].css',
+      chunkFilename: '[id].[chunkhash].css',
     }),
   ],
   module: {
@@ -20,7 +20,7 @@ module.exports = merge(common, {
           {
             loader: 'sass-loader',
             options: {
-              sourceMap: devMode,
+              sourceMap: false,
             },
           },
         ],

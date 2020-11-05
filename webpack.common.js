@@ -13,6 +13,7 @@ module.exports = {
       inject: true,
       title: 'Learning to Learn To See',
       template: 'src/index.html',
+      minify: false,
     }),
   ],
   module: {

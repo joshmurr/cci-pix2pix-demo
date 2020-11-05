@@ -2,7 +2,5 @@
 node_modules
 package-lock.json
 dist/index.html
-dist/main.css
-dist/main.js
-dist/main.js.LICENSE.txt
+dist/main.*
 .env
