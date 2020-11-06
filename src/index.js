@@ -9,14 +9,18 @@ let PLAY = false;
 let STATS = false;
 let MODEL_LOADED = false;
 const MODELS = {
-  small: 'models/clouds_256_4/model.json',
-  medium: 'models/flowers_256_8/model.json',
-  large: 'models/greyscale2flowers/uncompressed/model.json',
+  //small: 'models/clouds_256_4/model.json',
+  //medium: 'models/flowers_256_8/model.json',
+  //large: 'models/greyscale2flowers/uncompressed/model.json',
+  small: 'models/flowers_256_8_200e/uint8_affine_quantize/model.json',
+  medium: 'models/flowers_256_8_200e/uint16_affine_quantize/model.json',
+  large: 'models/flowers_256_8_200e/uncompressed/model.json',
 };
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const timer = document.getElementById('timer');
+const upload = document.getElementById('upload');
 const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
@@ -45,6 +49,9 @@ buttons[4].addEventListener('click', statsHandler);
 buttons[5].addEventListener('click', () => loadModel('small'));
 buttons[6].addEventListener('click', () => loadModel('medium'));
 buttons[7].addEventListener('click', () => loadModel('large'));
+buttons[8].addEventListener('click', () => {
+  upload.classList.toggle('hide');
+});
 
 function playHandler(_val) {
   PLAY = _val === 'stop' ? false : !PLAY;
@@ -80,6 +87,7 @@ const overlay = document.getElementById('overlay');
 
 let model;
 async function loadModel(modelID = 'med') {
+  const start = performance.now();
   overlay.childNodes[1].innerText = 'Loading model...';
 
   if (model) {
@@ -116,7 +124,7 @@ async function loadModel(modelID = 'med') {
   }
 
   allowUI();
-  console.log('MODEL LOADED');
+  console.log(`MODEL LOADED in ${performance.now() - start}ms`);
 }
 
 async function predict(model, pixels) {

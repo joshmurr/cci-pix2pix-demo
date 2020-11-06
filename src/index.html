@@ -32,7 +32,23 @@
         <button type="button" class="clickable">Small</button>
         <button type="button" class="clickable">Medium</button>
         <button type="button" class="clickable">Large</button>
+        <button type="button" class="clickable">Upload</button>
       </div>
+
+      <div id="upload" class="hide">
+        <label>
+          Upload Model (.json)
+          <input type="file" id="json-file" name="files[]" />
+        </label>
+
+        <label>
+          Upload Model Weights (.bin)
+          <input type="file" id="weights-files" name="files[]" multiple />
+        </label>
+
+        <button type="button" id="upload-button">Load Model</button>
+      </div>
+
       <table class="hide">
         <tr>
           <th>Step (ms)</th>
