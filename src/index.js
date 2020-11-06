@@ -8,13 +8,14 @@ let WEBCAM_ACTIVE = false;
 let PLAY = false;
 let STATS = false;
 let MODEL_LOADED = false;
+let USER_MODEL = {
+  json: null,
+  weights: null,
+};
 const MODELS = {
-  //small: 'models/clouds_256_4/model.json',
-  //medium: 'models/flowers_256_8/model.json',
-  //large: 'models/greyscale2flowers/uncompressed/model.json',
-  small: 'models/flowers_256_8_200e/uint8_affine_quantize/model.json',
-  medium: 'models/flowers_256_8_200e/uint16_affine_quantize/model.json',
-  large: 'models/flowers_256_8_200e/uncompressed/model.json',
+  small: 'models/clouds_256_4/model.json',
+  medium: 'models/flowers_256_8/model.json',
+  large: 'models/greyscale2flowers/uncompressed/model.json',
 };
 
 const video = document.getElementById('video');
@@ -50,7 +51,16 @@ buttons[5].addEventListener('click', () => loadModel('small'));
 buttons[6].addEventListener('click', () => loadModel('medium'));
 buttons[7].addEventListener('click', () => loadModel('large'));
 buttons[8].addEventListener('click', () => {
+  buttons[8].classList.toggle('pressed');
   upload.classList.toggle('hide');
+});
+const user_load_button = document.getElementById('upload-button');
+user_load_button.addEventListener('click', () => {
+  if (USER_MODEL.json && USER_MODEL.weights) {
+    loadModel('upload');
+  } else {
+    console.error('Please upload a JSON file and the model weights.');
+  }
 });
 
 function playHandler(_val) {
@@ -90,6 +100,7 @@ async function loadModel(modelID = 'med') {
   const start = performance.now();
   overlay.childNodes[1].innerText = 'Loading model...';
 
+  // Delete old model (as much as possible)
   if (model) {
     disableUI();
     console.log('Releasing memory used by previous model.');
@@ -97,9 +108,10 @@ async function loadModel(modelID = 'med') {
     tf.disposeVariables();
   }
 
+  // Upload model
   try {
-    if (modelID === 'User Upload') {
-      const load = tf.io.browserFiles([userModel.json, ...userModel.weights]);
+    if (modelID === 'upload') {
+      const load = tf.io.browserFiles([USER_MODEL.json, ...USER_MODEL.weights]);
       model = await tf.loadGraphModel(load, { strict: true });
     } else {
       model = await tf.loadGraphModel(MODELS[modelID], { strict: true });
@@ -128,10 +140,10 @@ async function loadModel(modelID = 'med') {
 }
 
 async function predict(model, pixels) {
-  // Take only Red value from RGBA data
   const red = (el, i, arr) => i % 4 === 0;
 
   const logits = tf.tidy(() => {
+    // Take only Red value from RGBA data
     const redChannel = pixels.filter(red);
     const img = tf.tensor(redChannel, [256, 256, 1]).toFloat();
 
@@ -221,3 +233,45 @@ function drawWithStats() {
     else requestAnimationFrame(draw);
   }
 }
+
+/* USER MODEL UPLOAD */
+const jsonFileElement = document.getElementById('json-file');
+jsonFileElement.addEventListener('change', function (e) {
+  let files = e.target.files;
+  if (files.length > 1) {
+    console.error('There should only be one JSON file.');
+    return;
+  }
+  for (let i = 0, f; (f = files[i]); i++) {
+    if (!f.type === 'application/json') {
+      console.error('Filetype should be JSON!');
+      continue;
+    }
+  }
+
+  USER_MODEL.json = files[0];
+  this.parentElement.classList.add('pressed');
+
+  if (USER_MODEL.weights) {
+    user_load_button.classList.add('clickable');
+    user_load_button.classList.remove('no-click', 'pressed');
+  }
+});
+
+const weightsFilesElement = document.getElementById('weights-files');
+weightsFilesElement.addEventListener('change', function (e) {
+  let files = e.target.files;
+  for (let i = 0, f; (f = files[i]); i++) {
+    if (!f.type === 'application/octet-stream') {
+      console.error('Wrong Weights filetype!');
+      continue;
+    }
+  }
+  USER_MODEL.weights = files;
+  this.parentElement.classList.add('pressed');
+
+  if (USER_MODEL.json) {
+    user_load_button.classList.add('clickable');
+    user_load_button.classList.remove('no-click', 'pressed');
+  }
+});
