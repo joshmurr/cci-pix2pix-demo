@@ -14,7 +14,7 @@ let USER_MODEL = {
 };
 const MODELS = {
   small: 'models/clouds_256_4/model.json',
-  medium: 'models/flowers_256_8/model.json',
+  medium: 'models/flowers_256_8_200e/uint8_affine_quantize/model.json',
   large: 'models/greyscale2flowers/uncompressed/model.json',
 };
 
@@ -32,6 +32,8 @@ const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => {
   buttons[0].classList.toggle('pressed', true);
   buttons[1].classList.toggle('pressed', false);
+  overlay.childNodes[1].innerHTML =
+    '<strong>Step</strong> to check everything is working, then <strong>Play</strong>';
   webcamHandler.initCam();
 });
 buttons[1].addEventListener('click', (e) => {
@@ -98,6 +100,7 @@ const overlay = document.getElementById('overlay');
 let model;
 async function loadModel(modelID = 'med') {
   const start = performance.now();
+  overlay.childNodes[3].remove();
   overlay.childNodes[1].innerText = 'Loading model...';
 
   // Delete old model (as much as possible)
@@ -129,10 +132,12 @@ async function loadModel(modelID = 'med') {
   MODEL_LOADED = true;
 
   if (!webcamHandler.camActive) {
-    overlay.childNodes[1].innerText =
-      'Init Webcam to give the model some data.';
+    overlay.childNodes[1].innerHTML =
+      '<strong>Init Webcam</strong> to give the model some data.';
   } else {
-    overlay.classList.add('hide');
+    overlay.childNodes[1].innerHTML =
+      '<strong>Step</strong> to check everything is working, then <strong>Play</strong>';
+    //overlay.classList.add('hide');
   }
 
   allowUI();

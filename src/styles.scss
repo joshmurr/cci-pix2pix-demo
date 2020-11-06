@@ -129,8 +129,11 @@ table {
   background-color: lightgrey;
   width: 1024px;
   height: 512px;
-  display: grid;
-  align-content: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
   p {
     opacity: 1;
   }
