@@ -1,6 +1,11 @@
 import GL_Core from './gl_core.js';
 import GL_Program from './gl_program.js';
 
+const gaussian1 = [ 0.045, 0.122, 0.045, 0.122, 0.332, 0.122, 0.045, 0.122, 0.045, ]; //prettier-ignore
+const gaussian2 = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+const gaussian3 = [0, 1, 0, 1, 1, 1, 0, 1, 0];
+const CONTRAST = 10;
+
 const blur_vs = `#version 300 es
       in vec4 a_position;
       in vec2 a_texcoord;
@@ -8,8 +13,8 @@ const blur_vs = `#version 300 es
       out vec2 v_texcoord;
 
       void main() {
-      gl_Position = a_position;
-      v_texcoord = a_texcoord;
+        gl_Position = a_position;
+        v_texcoord = a_texcoord;
       }
       `;
 
@@ -21,36 +26,31 @@ const blur_fs = `#version 300 es
       uniform vec2 u_inputsize;
       uniform float u_kernel[9];
       uniform float u_kernelWeight;
+      uniform int u_kernelLoop;
 
       in vec2 v_texcoord;
       out vec4 outColor;
 
       float get(vec2 p){
-      return texture(u_input, p).r;
+        return texture(u_input, p).r;
       }
 
       float convolve(vec2 p){
-      float sum = 0.0;
-      int k=0;
-      for(int y=-1; y<1; y++){
-      for(int x=-1; x<1; x++){
-      sum += get(p + vec2(x, y)/u_inputsize) * u_kernel[k++];
-      }
-      }
-      return sum / u_kernelWeight;
+        float sum = 0.0;
+        int k=0;
+        for(int y=-1; y<1; y++){
+          for(int x=-1; x<1; x++){
+            sum += get(p + vec2(x, y)/u_inputsize) * u_kernel[k++];
+          }
+        }
+        return sum / u_kernelWeight;
       }
 
       void main() {
-      float c = convolve(v_texcoord) * 2.2;
-      outColor = vec4(vec3(c), 1.0);
-      //outColor = texture(u_input, v_texcoord);
+        float c = convolve(v_texcoord) * 2.2;
+        outColor = vec4(vec3(c), 1.0);
       }
       `;
-
-const gaussian1 = [ 0.045, 0.122, 0.045, 0.122, 0.332, 0.122, 0.045, 0.122, 0.045, ]; //prettier-ignore
-const gaussian2 = [1, 2, 1, 2, 4, 2, 1, 2, 1];
-const gaussian3 = [0, 1, 0, 1, 1, 1, 0, 1, 0];
-const CONTRAST = 10;
 
 export default class GL_IO extends GL_Core {
   constructor(gl) {
@@ -175,7 +175,7 @@ export default class GL_IO extends GL_Core {
 
       void main() {
         outColor = texture(u_input, v_texcoord) * 1.7;
-        outColor.r = contrast(outColor.r);
+	outColor.r = contrast(outColor.r);
       }
       `,
       attributes: ['a_position', 'a_texcoord'],
@@ -221,8 +221,6 @@ export default class GL_IO extends GL_Core {
     });
 
     this.pixel_store = new Uint8Array(256 * 256 * 4);
-
-    //this.resize();
   }
 
   computeKernelWeight(kernel) {
@@ -234,7 +232,7 @@ export default class GL_IO extends GL_Core {
     return this.pixel_store;
   }
 
-  draw(_in, _out) {
+  draw(_in, _out, _drawProcess = false) {
     this.gl.enable(this.gl.SCISSOR_TEST);
 
     /* PREPROCESS PIPELINE */
@@ -255,7 +253,8 @@ export default class GL_IO extends GL_Core {
     );
 
     /* RENDER OUTPUT FROM MODEL */
-    this.output.draw(_in, 0, 0);
+    if (_drawProcess) this.output.draw(this.upscale.output, 0, 0);
+    else this.output.draw(_in, 0, 0);
     this.output.draw(_out, 512, 0);
   }
 }

@@ -8,6 +8,7 @@ let WEBCAM_ACTIVE = false;
 let PLAY = false;
 let STATS = false;
 let MODEL_LOADED = false;
+let SHOW_PREPROCESS = false;
 let USER_MODEL = {
   json: null,
   weights: null,
@@ -26,7 +27,7 @@ const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 const glio = new GL_IO(gl);
 const webcamHandler = new WebcamHandler(video);
 
-/* BUTTONS */
+/* BUTTONS - 1st ROW */
 const buttons_containers = document.getElementsByTagName('buttons');
 const buttons = document.getElementsByTagName('button');
 buttons[0].addEventListener('click', (e) => {
@@ -48,12 +49,17 @@ buttons[2].addEventListener('click', () => {
 });
 buttons[3].addEventListener('click', playHandler);
 buttons[4].addEventListener('click', statsHandler);
+buttons[5].addEventListener('click', function () {
+  this.classList.toggle('pressed');
+  SHOW_PREPROCESS = !SHOW_PREPROCESS;
+});
 
-buttons[5].addEventListener('click', () => loadModel('small'));
-buttons[6].addEventListener('click', () => loadModel('medium'));
-buttons[7].addEventListener('click', () => loadModel('large'));
-buttons[8].addEventListener('click', () => {
-  buttons[8].classList.toggle('pressed');
+/* BUTTONS - 2nd ROW */
+buttons[6].addEventListener('click', () => loadModel('small'));
+buttons[7].addEventListener('click', () => loadModel('medium'));
+buttons[8].addEventListener('click', () => loadModel('large'));
+buttons[9].addEventListener('click', () => {
+  buttons[9].classList.toggle('pressed');
   upload.classList.toggle('hide');
 });
 const user_load_button = document.getElementById('upload-button');
@@ -162,7 +168,7 @@ async function predict(model, pixels) {
   const output = await postProcessTF(logits);
   const data = await output.data();
 
-  glio.draw(video, data);
+  glio.draw(video, data, SHOW_PREPROCESS);
 
   output.dispose();
   logits.dispose();
