@@ -14,9 +14,9 @@ let USER_MODEL = {
   weights: null,
 };
 const MODELS = {
-  small: 'models/clouds_256_4/model.json',
-  medium: 'models/flowers_256_8_200e/uint8_affine_quantize/model.json',
-  large: 'models/greyscale2flowers/uncompressed/model.json',
+  small: 'models/aurora/model.json',
+  medium: 'models/clouds/model.json',
+  large: 'models/flowers/model.json',
 };
 
 const video = document.getElementById('video');
@@ -106,7 +106,10 @@ const overlay = document.getElementById('overlay');
 let model;
 async function loadModel(modelID = 'med') {
   const start = performance.now();
-  overlay.childNodes[3].remove();
+
+  playHandler('stop');
+
+  if (overlay.childNodes[3]) overlay.childNodes[3].remove();
   overlay.childNodes[1].innerText = 'Loading model...';
 
   // Delete old model (as much as possible)
@@ -143,7 +146,6 @@ async function loadModel(modelID = 'med') {
   } else {
     overlay.childNodes[1].innerHTML =
       '<strong>Step</strong> to check everything is working, then <strong>Play</strong>';
-    //overlay.classList.add('hide');
   }
 
   allowUI();

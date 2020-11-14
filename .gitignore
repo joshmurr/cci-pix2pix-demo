@@ -2,5 +2,5 @@
 node_modules
 dist/index.html
 dist/main.*
-dist/models/flowers_256*
+dist/models/ignore
 .env
