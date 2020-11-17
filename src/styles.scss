@@ -163,8 +163,25 @@ span {
     font-family: 'fira sans';
     font-size: 14px;
   }
+}
 
-  //#upload-button {
-  //width: 100%;
-  //}
+#progress_bar {
+  margin: 10px 0;
+  font-size: 14px;
+  clear: both;
+  opacity: 1;
+  -moz-transition: opacity 1s linear;
+  -o-transition: opacity 1s linear;
+  -webkit-transition: opacity 1s linear;
+  width: 30%;
+  height: 30px;
+
+  .loading {
+    opacity: 0;
+  }
+  .percent {
+    background-color: #99ccff;
+    height: auto;
+    width: 0;
+  }
 }

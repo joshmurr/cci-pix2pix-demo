@@ -102,6 +102,17 @@ function statsHandler() {
 
 /* OVERLAY */
 const overlay = document.getElementById('overlay');
+const autoPix2Pix = document.getElementById('auto_pix2pix');
+const progressContainer = document.getElementById('progress_bar');
+const progress = document.querySelector('.percent');
+
+function loadingHandler(f) {
+  if (f < 1) {
+    let percent = Math.floor(f * 100);
+    progress.style.width = `${percent}%`;
+    progress.textContent = `${percent}%`;
+  }
+}
 
 let model;
 async function loadModel(modelID = 'med') {
@@ -109,8 +120,9 @@ async function loadModel(modelID = 'med') {
 
   playHandler('stop');
 
-  if (overlay.childNodes[3]) overlay.childNodes[3].remove();
+  autoPix2Pix.classList.add('hide');
   overlay.childNodes[1].innerText = 'Loading model...';
+  progressContainer.classList.toggle('hide', false);
 
   // Delete old model (as much as possible)
   if (model) {
@@ -121,17 +133,28 @@ async function loadModel(modelID = 'med') {
   }
 
   // Upload model
+  progress.style.width = '0%';
+  progress.textContent = '0%';
   try {
     if (modelID === 'upload') {
       const load = tf.io.browserFiles([USER_MODEL.json, ...USER_MODEL.weights]);
-      model = await tf.loadGraphModel(load, { strict: true });
+      model = await tf.loadGraphModel(load, {
+        strict: true,
+        onProgress: (f) => loadingHandler(f),
+      });
     } else {
-      model = await tf.loadGraphModel(MODELS[modelID], { strict: true });
+      model = await tf.loadGraphModel(MODELS[modelID], {
+        strict: true,
+        onProgress: (f) => loadingHandler(f),
+      });
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return;
   }
+  progress.style.width = '100%';
+  progress.textContent = '100%';
+
   MODEL_INPUT_SHAPE = getTensorShape(
     model.artifacts.userDefinedMetadata.signature.inputs
   );

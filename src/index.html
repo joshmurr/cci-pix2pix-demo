@@ -10,13 +10,16 @@
       <div class="container">
         <div id="overlay" class="overlay">
           <p>Choose a model size to load or upload your own model.</p>
-          <p>
+          <p id="auto_pix2pix">
             See
             <a href="https://github.com/joshmurr/cci-auto-pix2pix/"
               >Auto-Pix2Pix</a
             >
             to train your own model.
           </p>
+          <div id="progress_bar" class="hide">
+            <div class="percent">0%</div>
+          </div>
         </div>
         <video
           id="video"
