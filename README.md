@@ -1,3 +1,7 @@
+# Learning to Learn to See
+### Thesis Project Final Outcome
+### Josh Murr, MSc Creative Computing 19/20
+
 ![Screenshot](./screenshot.png)
 
 > ### Text below is taken from the online demo which is [running here][demo].
