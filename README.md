@@ -2,7 +2,7 @@
 ### Thesis Project Final Outcome
 ### Josh Murr, MSc Creative Computing 19/20
 
-![Screenshot](./screenshot.png)
+![Screenshot](./flower.png)
 
 > ### Text below is taken from the online demo which is [running here][demo].
 
