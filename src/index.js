@@ -3,7 +3,7 @@ import WebcamHandler from './webcam_handler.js';
 import GL_IO from './gl_io.js';
 import './styles.scss';
 
-let MODEL_INPUT_SHAPE;
+let MODEL_INPUT_SHAPE = [1, 256, 256, 1];
 let WEBCAM_ACTIVE = false;
 let PLAY = false;
 let STATS = false;
@@ -154,10 +154,6 @@ async function loadModel(modelID = 'med') {
   }
   progress.style.width = '100%';
   progress.textContent = '100%';
-
-  MODEL_INPUT_SHAPE = getTensorShape(
-    model.artifacts.userDefinedMetadata.signature.inputs
-  );
 
   model.predict(tf.zeros(MODEL_INPUT_SHAPE)).dispose();
 
